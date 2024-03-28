@@ -33,8 +33,7 @@ services:
       target: prod-stage
     container_name: LibreChat-NGINX
     ports:
-      - 8080:80
-      - 4443:443
+      - 3002:80
     depends_on:
       - api
     restart: always
