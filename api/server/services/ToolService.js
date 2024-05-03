@@ -12,13 +12,21 @@ const {
   openapiToFunction,
   validateAndParseOpenAPISpec,
 } = require('librechat-data-provider');
+const { processFileURL, uploadImageBuffer } = require('~/server/services/Files/process');
 const { loadActionSets, createActionTool, domainParser } = require('./ActionService');
-const { processFileURL } = require('~/server/services/Files/process');
 const { recordUsage } = require('~/server/services/Threads');
 const { loadTools } = require('~/app/clients/tools/util');
 const { redactMessage } = require('~/config/parsers');
 const { sleep } = require('~/server/utils');
 const { logger } = require('~/config');
+
+const filteredTools = new Set([
+  'ChatTool.js',
+  'CodeSherpa.js',
+  'CodeSherpaTools.js',
+  'E2BTools.js',
+  'extractionChain.js',
+]);
 
 /**
  * Loads and formats tools from the specified tool directory.
@@ -30,10 +38,11 @@ const { logger } = require('~/config');
  *
  * @param {object} params - The parameters for the function.
  * @param {string} params.directory - The directory path where the tools are located.
- * @param {Set<string>} [params.filter=new Set()] - A set of filenames to exclude from loading.
+ * @param {Array<string>} [params.adminFilter=[]] - Array of admin-defined tool keys to exclude from loading.
  * @returns {Record<string, FunctionTool>} An object mapping each tool's plugin key to its instance.
  */
-function loadAndFormatTools({ directory, filter = new Set() }) {
+function loadAndFormatTools({ directory, adminFilter = [] }) {
+  const filter = new Set([...adminFilter, ...filteredTools]);
   const tools = [];
   /* Structured Tools Directory */
   const files = fs.readdirSync(directory);
@@ -147,7 +156,7 @@ const processVisionRequest = async (client, currentAction) => {
 
 /**
  * Processes return required actions from run.
- * @param {OpenAIClient} client - OpenAI or StreamRunManager Client.
+ * @param {OpenAIClient | StreamRunManager} client - OpenAI (legacy) or StreamRunManager Client.
  * @param {RequiredAction[]} requiredActions - The required actions to submit outputs for.
  * @returns {Promise<ToolOutputs>} The outputs of the tools.
  */
@@ -164,6 +173,8 @@ async function processRequiredActions(client, requiredActions) {
     functions: true,
     options: {
       processFileURL,
+      req: client.req,
+      uploadImageBuffer,
       openAIApiKey: client.apiKey,
       fileStrategy: client.req.app.locals.fileStrategy,
       returnMetadata: true,
@@ -268,14 +279,20 @@ async function processRequiredActions(client, requiredActions) {
       if (!actionSets.length) {
         actionSets =
           (await loadActionSets({
-            user: client.req.user.id,
             assistant_id: client.req.body.assistant_id,
           })) ?? [];
       }
 
-      const actionSet = actionSets.find((action) =>
-        currentAction.tool.includes(domainParser(client.req, action.metadata.domain, true)),
-      );
+      let actionSet = null;
+      let currentDomain = '';
+      for (let action of actionSets) {
+        const domain = await domainParser(client.req, action.metadata.domain, true);
+        if (currentAction.tool.includes(domain)) {
+          currentDomain = domain;
+          actionSet = action;
+          break;
+        }
+      }
 
       if (!actionSet) {
         // TODO: try `function` if no action set is found
@@ -297,10 +314,8 @@ async function processRequiredActions(client, requiredActions) {
         builders = requestBuilders;
       }
 
-      const functionName = currentAction.tool.replace(
-        `${actionDelimiter}${domainParser(client.req, actionSet.metadata.domain, true)}`,
-        '',
-      );
+      const functionName = currentAction.tool.replace(`${actionDelimiter}${currentDomain}`, '');
+
       const requestBuilder = builders[functionName];
 
       if (!requestBuilder) {

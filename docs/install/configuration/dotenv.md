@@ -16,7 +16,7 @@ Alternatively, you can create a new file named `docker-compose.override.yml` in 
 For more info see: 
 
 - Our quick guide: 
-    - **[Docker Override](../configuration/docker_override.md)**
+    - **[Docker Override](./docker_override.md)**
 
 - The official docker documentation: 
     - **[docker docs - understanding-multiple-compose-files](https://docs.docker.com/compose/multiple-compose-files/extends/#understanding-multiple-compose-files)**
@@ -24,7 +24,7 @@ For more info see:
     - **[docker docs - specifying-multiple-compose-files](https://docs.docker.com/compose/reference/#specifying-multiple-compose-files)**
 
 - You can also view an example of an override file for LibreChat in your LibreChat folder and on GitHub: 
-    - **[docker-compose.override.example](https://github.com/danny-avila/LibreChat/blob/main/docker-compose.override.yaml.example)**
+    - **[docker-compose.override.example](https://github.com/danny-avila/LibreChat/blob/main/docker-compose.override.yml.example)**
 
 ---
 
@@ -94,14 +94,25 @@ LibreChat has built-in central logging, see [Logging System](../../features/logg
 - Keep debug logs active by default or disable them by setting `DEBUG_LOGGING=false` in the environment variable.
 - For more information about this feature, read our docs: **[Logging System](../../features/logging_system.md)**
 
+- Enable verbose file logs with `DEBUG_LOGGING=TRUE`.
+- Note: can be used with either `DEBUG_CONSOLE` or `CONSOLE_JSON` but not both.
+
 ```bash
 DEBUG_LOGGING=true
 ```
 
-- Enable verbose server output in the console with `DEBUG_CONSOLE=TRUE`, though it's not recommended due to high verbosity.
+- Enable verbose console/stdout logs with `DEBUG_CONSOLE=TRUE` in the same format as file debug logs.
+- Note: can be used in conjunction with `DEBUG_LOGGING` but not `CONSOLE_JSON`.
 
 ```bash
 DEBUG_CONSOLE=false
+```
+
+- Enable verbose JSON console/stdout logs suitable for cloud deployments like GCP/AWS
+- Note: can be used in conjunction with `DEBUG_LOGGING` but not `DEBUG_CONSOLE`.
+
+```bash
+CONSOLE_JSON=false
 ```
 
 This is not recommend, however, as the outputs can be quite verbose, and so it's disabled by default.
@@ -151,13 +162,14 @@ TITLE_CONVO=true
 - see also: [Custom Configuration](./custom_config.md)
 
 ```sh
-GROQ_API_KEY=
-SHUTTLEAI_KEY=
-OPENROUTER_KEY=
-MISTRAL_API_KEY=
 ANYSCALE_API_KEY=
+APIPIE_API_KEY=
 FIREWORKS_API_KEY=
+GROQ_API_KEY=
+MISTRAL_API_KEY=
+OPENROUTER_KEY=
 PERPLEXITY_API_KEY=
+SHUTTLEAI_API_KEY=
 TOGETHERAI_API_KEY=
 ```
 
@@ -220,7 +232,7 @@ AZURE_OPENAI_BASEURL=https://gateway.ai.cloudflare.com/v1/ACCOUNT_TAG/GATEWAY/az
 - Sets the base URL for Azure OpenAI API requests.
 - Can include `${INSTANCE_NAME}` and `${DEPLOYMENT_NAME}` placeholders or specific credentials.
 - Example: "https://gateway.ai.cloudflare.com/v1/ACCOUNT_TAG/GATEWAY/azure-openai/${INSTANCE_NAME}/${DEPLOYMENT_NAME}"
-- [More info about `AZURE_OPENAI_BASEURL` here](./ai_setup.md#using-a-specified-base-url-with-azure)
+- [More info about `AZURE_OPENAI_BASEURL` here](./azure_openai.md#using-a-specified-base-url-with-azure)
 
 > Note: as deployment names can't have periods, they will be removed when the endpoint is generated.
 
@@ -263,7 +275,7 @@ DALLE2_API_KEY=your-azure-api-key-for-dall-e-2
 ### BingAI
 Bing, also used for Sydney, jailbreak, and Bing Image Creator, see: [Bing Access token](./ai_setup.md#bingai) and [Bing Jailbreak](../../features/bing_jailbreak.md)
 
-- Follow these instructions to get your bing access token (it's best to use the full cookie string for that purpose): **[Bing Access Token](../configuration/ai_setup.md#bingai)**  
+- Follow these instructions to get your bing access token (it's best to use the full cookie string for that purpose): **[Bing Access Token](./ai_setup.md#bingai)**  
 - Leave `BINGAI_TOKEN=` blank to disable this endpoint
 - Set `BINGAI_TOKEN=` to "user_provided" to allow users to provide their own API key from the WebUI
 
@@ -400,7 +412,7 @@ ASSISTANTS_BASE_URL=http://your-alt-baseURL:3080/
 - There is additional, optional configuration, depending on your needs, such as disabling the assistant builder UI, and determining which assistants can be used, that are available via the [`librechat.yaml` custom config file](./custom_config.md#assistants-endpoint-object-structure).
 
 ### OpenRouter
-See [OpenRouter](./free_ai_apis.md#openrouter-preferred) for more info.
+See [OpenRouter](./ai_endpoints.md#openrouter) for more info.
 
 - OpenRouter is a legitimate proxy service to a multitude of LLMs, both closed and open source, including: OpenAI models, Anthropic models, Meta's Llama models, pygmalionai/mythalion-13b and many more open source models. Newer integrations are usually discounted, too!
 
@@ -512,7 +524,7 @@ Remember to replace placeholder text such as "Your DALL-E-3 System Prompt here" 
 See detailed instructions here: [Google Search](../../features/plugins/google_search.md)
 
 ```bash
-GOOGLE_API_KEY=
+GOOGLE_SEARCH_API_KEY=
 GOOGLE_CSE_ID=
 ```
 
@@ -708,7 +720,7 @@ CHECK_BALANCE=false
 ```
 
 ### Registration and Login
-see: **[User/Auth System](../configuration/user_auth_system.md)**
+see: **[User/Auth System](./user_auth_system.md)**
 
 ![image](https://github.com/danny-avila/LibreChat/assets/81851188/52a37d1d-7392-4a9a-a79f-90ed2da7f841)
 
@@ -746,9 +758,9 @@ JWT_REFRESH_SECRET=eaa5191f2914e30b9387fd84e254e4ba6fc51b4654968a9b0803b456a54b8
 
 ### Social Logins
 
-#### [Discord Authentication](../configuration/user_auth_system.md#discord)
+#### [Discord Authentication](./OAuth2-and-OIDC/discord.md)
 
-for more information: **[Discord](../configuration/user_auth_system.md#discord)**
+for more information: **[Discord](./OAuth2-and-OIDC/discord.md)**
 
 ```bash
 # Discord
@@ -757,9 +769,9 @@ DISCORD_CLIENT_SECRET=your_client_secret
 DISCORD_CALLBACK_URL=/oauth/discord/callback
 ```
 
-#### [Facebook Authentication](../configuration/user_auth_system.md#facebook)
+#### [Facebook Authentication](./OAuth2-and-OIDC/facebook.md)
 
-for more information: **[Facebook Authentication](../configuration/user_auth_system.md#facebook)**
+for more information: **[Facebook Authentication](./OAuth2-and-OIDC/facebook.md)**
 
 ```bash
 # Facebook
@@ -768,9 +780,9 @@ FACEBOOK_CLIENT_SECRET=
 FACEBOOK_CALLBACK_URL=/oauth/facebook/callback
 
 ```
-#### [GitHub Authentication](../configuration/user_auth_system.md#github)
+#### [GitHub Authentication](./OAuth2-and-OIDC/github.md)
 
-for more information: **[GitHub Authentication](../configuration/user_auth_system.md#github)**
+for more information: **[GitHub Authentication](./OAuth2-and-OIDC/github.md)**
 
 ```bash
 # GitHub
@@ -779,9 +791,9 @@ GITHUB_CLIENT_SECRET=your_client_secret
 GITHUB_CALLBACK_URL=/oauth/github/callback
 ```
 
-#### [Google Authentication](../configuration/user_auth_system.md#google)
+#### [Google Authentication](./OAuth2-and-OIDC/google.md)
 
-for more information: **[Google Authentication](../configuration/user_auth_system.md#google)**
+for more information: **[Google Authentication](./OAuth2-and-OIDC/google.md)**
 
 ```bash
 # Google
@@ -790,9 +802,9 @@ GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=/oauth/google/callback
 ```
 
-#### [OpenID Authentication](../configuration/user_auth_system.md#openid-with-aws-cognito)
+#### [OpenID Authentication](./OAuth2-and-OIDC/aws.md)
 
-for more information: **[Azure OpenID Authentication](../configuration/user_auth_system.md#openid-with-azure-ad)** or **[AWS Cognito OpenID Authentication](../configuration/user_auth_system.md#openid-with-aws-cognito)**
+for more information: **[Azure OpenID Authentication](./OAuth2-and-OIDC/azure.md)** or **[AWS Cognito OpenID Authentication](./OAuth2-and-OIDC/aws.md)**
 
 ```bash
 # OpenID
@@ -802,13 +814,15 @@ OPENID_ISSUER=
 OPENID_SESSION_SECRET=
 OPENID_SCOPE="openid profile email"
 OPENID_CALLBACK_URL=/oauth/openid/callback
-
 OPENID_BUTTON_LABEL=
 OPENID_IMAGE_URL=
+OPENID_REQUIRED_ROLE_TOKEN_KIND=
+OPENID_REQUIRED_ROLE=
+OPENID_REQUIRED_ROLE_PARAMETER_PATH=
 ```
 
 ### Email Password Reset
-Email is used for password reset. See: **[Email Password Reset](../configuration/user_auth_system.md#email-and-password-reset)**
+Email is used for password reset. See: **[Email Password Reset](./user_auth_system.md#email-and-password-reset)**
 
 - Note that all either service or host, username and password and the From address must be set for email to work.
 
