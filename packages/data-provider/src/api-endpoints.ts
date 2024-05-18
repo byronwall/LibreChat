@@ -7,6 +7,13 @@ export const userPlugins = () => '/api/user/plugins';
 export const messages = (conversationId: string, messageId?: string) =>
   `/api/messages/${conversationId}${messageId ? `/${messageId}` : ''}`;
 
+const shareRoot = '/api/share';
+export const shareMessages = (shareId: string) => `${shareRoot}/${shareId}`;
+export const getSharedLinks = (pageNumber: string, isPublic: boolean) =>
+  `${shareRoot}?pageNumber=${pageNumber}&isPublic=${isPublic}`;
+export const createSharedLink = shareRoot;
+export const updateSharedLink = shareRoot;
+
 const keysEndpoint = '/api/keys';
 
 export const keys = () => keysEndpoint;
@@ -21,8 +28,8 @@ export const abortRequest = (endpoint: string) => `/api/ask/${endpoint}/abort`;
 
 export const conversationsRoot = '/api/convos';
 
-export const conversations = (pageNumber: string) =>
-  `${conversationsRoot}?pageNumber=${pageNumber}`;
+export const conversations = (pageNumber: string, isArchived?: boolean) =>
+  `${conversationsRoot}?pageNumber=${pageNumber}${isArchived ? '&isArchived=true' : ''}`;
 
 export const conversationById = (id: string) => `${conversationsRoot}/${id}`;
 
@@ -33,6 +40,8 @@ export const updateConversation = () => `${conversationsRoot}/update`;
 export const deleteConversation = () => `${conversationsRoot}/clear`;
 
 export const importConversation = () => `${conversationsRoot}/import`;
+
+export const forkConversation = () => `${conversationsRoot}/fork`;
 
 export const importConversationJobStatus = (jobId: string) =>
   `${conversationsRoot}/import/jobs/${jobId}`;

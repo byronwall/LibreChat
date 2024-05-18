@@ -31,6 +31,34 @@ export function getMessagesByConvoId(conversationId: string): Promise<s.TMessage
   return request.get(endpoints.messages(conversationId));
 }
 
+export function getSharedMessages(shareId: string): Promise<t.TSharedMessagesResponse> {
+  return request.get(endpoints.shareMessages(shareId));
+}
+
+export const listSharedLinks = (
+  params?: q.SharedLinkListParams,
+): Promise<q.SharedLinksResponse> => {
+  const pageNumber = params?.pageNumber || '1'; // Default to page 1 if not provided
+  const isPublic = params?.isPublic || true; // Default to true if not provided
+  return request.get(endpoints.getSharedLinks(pageNumber, isPublic));
+};
+
+export function getSharedLink(shareId: string): Promise<t.TSharedLinkResponse> {
+  return request.get(endpoints.shareMessages(shareId));
+}
+
+export function createSharedLink(payload: t.TSharedLinkRequest): Promise<t.TSharedLinkResponse> {
+  return request.post(endpoints.createSharedLink, payload);
+}
+
+export function updateSharedLink(payload: t.TSharedLinkRequest): Promise<t.TSharedLinkResponse> {
+  return request.patch(endpoints.updateSharedLink, payload);
+}
+
+export function deleteSharedLink(shareId: string): Promise<t.TDeleteSharedLinkResponse> {
+  return request.delete(endpoints.shareMessages(shareId));
+}
+
 export function updateMessage(payload: t.TUpdateMessageRequest): Promise<unknown> {
   const { conversationId, messageId, text } = payload;
   if (!conversationId) {
@@ -261,6 +289,10 @@ export const deleteAction = async (
 
 /* conversations */
 
+export function forkConversation(payload: t.TForkConvoRequest): Promise<t.TForkConvoResponse> {
+  return request.post(endpoints.forkConversation(), payload);
+}
+
 export function deleteConversation(payload: t.TDeleteConversationRequest) {
   //todo: this should be a DELETE request
   return request.post(endpoints.deleteConversation(), { arg: payload });
@@ -275,7 +307,8 @@ export const listConversations = (
 ): Promise<q.ConversationListResponse> => {
   // Assuming params has a pageNumber property
   const pageNumber = params?.pageNumber || '1'; // Default to page 1 if not provided
-  return request.get(endpoints.conversations(pageNumber));
+  const isArchived = params?.isArchived || false; // Default to false if not provided
+  return request.get(endpoints.conversations(pageNumber, isArchived));
 };
 
 export const listConversationsByQuery = (
@@ -309,6 +342,12 @@ export function getConversationById(id: string): Promise<s.TConversation> {
 export function updateConversation(
   payload: t.TUpdateConversationRequest,
 ): Promise<t.TUpdateConversationResponse> {
+  return request.post(endpoints.updateConversation(), { arg: payload });
+}
+
+export function archiveConversation(
+  payload: t.TArchiveConversationRequest,
+): Promise<t.TArchiveConversationResponse> {
   return request.post(endpoints.updateConversation(), { arg: payload });
 }
 

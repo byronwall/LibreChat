@@ -1,5 +1,12 @@
 import OpenAI from 'openai';
-import type { TResPlugin, TMessage, TConversation, EModelEndpoint, ImageDetail } from './schemas';
+import type {
+  TResPlugin,
+  TMessage,
+  TConversation,
+  EModelEndpoint,
+  ImageDetail,
+  TSharedLink,
+} from './schemas';
 import type { TSpecsConfig } from './models';
 export type TOpenAIMessage = OpenAI.Chat.ChatCompletionMessageParam;
 export type TOpenAIFunction = OpenAI.Chat.ChatCompletionCreateParams.Function;
@@ -17,6 +24,7 @@ export type TEndpointOption = {
   endpointType?: EModelEndpoint;
   modelDisplayLabel?: string;
   resendFiles?: boolean;
+  maxContextTokens?: number;
   imageDetail?: ImageDetail;
   model?: string | null;
   promptPrefix?: string;
@@ -123,6 +131,39 @@ export type TDeleteConversationResponse = {
     acknowledged: boolean;
     deletedCount: number;
   };
+};
+
+export type TArchiveConversationRequest = {
+  conversationId: string;
+  isArchived: boolean;
+};
+
+export type TArchiveConversationResponse = TConversation;
+
+export type TSharedMessagesResponse = Omit<TSharedLink, 'messages'> & {
+  messages: TMessage[];
+};
+export type TSharedLinkRequest = Partial<
+  Omit<TSharedLink, 'messages' | 'createdAt' | 'updatedAt'>
+> & {
+  conversationId: string;
+};
+
+export type TSharedLinkResponse = TSharedLink;
+export type TSharedLinksResponse = TSharedLink[];
+export type TDeleteSharedLinkResponse = TSharedLink;
+
+export type TForkConvoRequest = {
+  messageId: string;
+  conversationId: string;
+  option?: string;
+  splitAtTarget?: boolean;
+  latestMessageId?: string;
+};
+
+export type TForkConvoResponse = {
+  conversation: TConversation;
+  messages: TMessage[];
 };
 
 export type TSearchResults = {
